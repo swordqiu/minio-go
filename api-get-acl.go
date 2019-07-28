@@ -19,36 +19,35 @@ package minio
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
 	"github.com/minio/minio-go/pkg/s3utils"
 )
 
-// GetBucketPolicy - get bucket policy at a given path.
-func (c Client) GetBucketPolicy(bucketName string) (string, error) {
+// GetBucketAcl - get bucket acl at a given path.
+func (c Client) GetBucketAcl(bucketName string) (*AccessControlPolicy, error) {
 	// Input validation.
 	if err := s3utils.CheckValidBucketName(bucketName); err != nil {
-		return "", err
+		return nil, err
 	}
-	bucketPolicy, err := c.getBucketPolicy(bucketName)
+	bucketAcl, err := c.getBucketAcl(bucketName)
 	if err != nil {
 		errResponse := ToErrorResponse(err)
 		if errResponse.Code == "NoSuchBucketPolicy" {
-			return "", nil
+			return nil, nil
 		}
-		return "", err
+		return nil, err
 	}
-	return bucketPolicy, nil
+	return bucketAcl, nil
 }
 
-// Request server for current bucket policy.
-func (c Client) getBucketPolicy(bucketName string) (string, error) {
+// Request server for current bucket ACL.
+func (c Client) getBucketAcl(bucketName string) (*AccessControlPolicy, error) {
 	// Get resources properly escaped and lined up before
 	// using them in http request.
 	urlValues := make(url.Values)
-	urlValues.Set("policy", "")
+	urlValues.Set("acl", "")
 
 	// Execute GET on bucket to list objects.
 	resp, err := c.executeMethod(context.Background(), "GET", requestMetadata{
@@ -59,20 +58,20 @@ func (c Client) getBucketPolicy(bucketName string) (string, error) {
 
 	defer closeResponse(resp)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if resp != nil {
 		if resp.StatusCode != http.StatusOK {
-			return "", httpRespToErrorResponse(resp, bucketName, "")
+			return nil, httpRespToErrorResponse(resp, bucketName, "")
 		}
 	}
 
-	bucketPolicyBuf, err := ioutil.ReadAll(resp.Body)
+	acl := &AccessControlPolicy{}
+	err = xmlDecoder(resp.Body, acl)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	policy := string(bucketPolicyBuf)
-	return policy, err
+	return acl, err
 }

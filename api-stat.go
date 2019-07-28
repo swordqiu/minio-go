@@ -24,14 +24,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/minio/minio-go/v6/pkg/s3utils"
+	"github.com/minio/minio-go/pkg/s3utils"
 )
 
 // BucketExists verify if bucket exists and you have permission to access it.
-func (c Client) BucketExists(bucketName string) (bool, error) {
+func (c Client) BucketExists(bucketName string) (bool, http.Header, error) {
 	// Input validation.
 	if err := s3utils.CheckValidBucketName(bucketName); err != nil {
-		return false, err
+		return false, nil, err
 	}
 
 	// Execute HEAD on bucketName.
@@ -42,20 +42,20 @@ func (c Client) BucketExists(bucketName string) (bool, error) {
 	defer closeResponse(resp)
 	if err != nil {
 		if ToErrorResponse(err).Code == "NoSuchBucket" {
-			return false, nil
+			return false, nil, nil
 		}
-		return false, err
+		return false, nil, err
 	}
 	if resp != nil {
 		resperr := httpRespToErrorResponse(resp, bucketName, "")
 		if ToErrorResponse(resperr).Code == "NoSuchBucket" {
-			return false, nil
+			return false, nil, nil
 		}
 		if resp.StatusCode != http.StatusOK {
-			return false, httpRespToErrorResponse(resp, bucketName, "")
+			return false, nil, httpRespToErrorResponse(resp, bucketName, "")
 		}
 	}
-	return true, nil
+	return true, resp.Header, nil
 }
 
 // List of header keys to be filtered, usually

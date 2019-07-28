@@ -26,13 +26,13 @@ import (
 	"github.com/minio/minio-go/pkg/s3utils"
 )
 
-// GetBucketPolicy - get bucket policy at a given path.
-func (c Client) GetBucketPolicy(bucketName string) (string, error) {
+// GetBucketCors - get bucket CORS at a given path.
+func (c Client) GetBucketCors(bucketName string) (string, error) {
 	// Input validation.
 	if err := s3utils.CheckValidBucketName(bucketName); err != nil {
 		return "", err
 	}
-	bucketPolicy, err := c.getBucketPolicy(bucketName)
+	bucketCors, err := c.getBucketCors(bucketName)
 	if err != nil {
 		errResponse := ToErrorResponse(err)
 		if errResponse.Code == "NoSuchBucketPolicy" {
@@ -40,15 +40,15 @@ func (c Client) GetBucketPolicy(bucketName string) (string, error) {
 		}
 		return "", err
 	}
-	return bucketPolicy, nil
+	return bucketCors, nil
 }
 
-// Request server for current bucket policy.
-func (c Client) getBucketPolicy(bucketName string) (string, error) {
+// Request server for current bucket CORS.
+func (c Client) getBucketCors(bucketName string) (string, error) {
 	// Get resources properly escaped and lined up before
 	// using them in http request.
 	urlValues := make(url.Values)
-	urlValues.Set("policy", "")
+	urlValues.Set("cors", "")
 
 	// Execute GET on bucket to list objects.
 	resp, err := c.executeMethod(context.Background(), "GET", requestMetadata{
@@ -68,11 +68,11 @@ func (c Client) getBucketPolicy(bucketName string) (string, error) {
 		}
 	}
 
-	bucketPolicyBuf, err := ioutil.ReadAll(resp.Body)
+	bucketCorsBuf, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 
-	policy := string(bucketPolicyBuf)
-	return policy, err
+	acl := string(bucketCorsBuf)
+	return acl, err
 }

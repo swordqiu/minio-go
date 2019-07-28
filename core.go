@@ -22,7 +22,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/minio/minio-go/v6/pkg/encrypt"
+	"github.com/minio/minio-go/pkg/encrypt"
 )
 
 // Core - Inherits Client and adds new methods to expose the low level S3 APIs.
@@ -33,9 +33,9 @@ type Core struct {
 // NewCore - Returns new initialized a Core client, this CoreClient should be
 // only used under special conditions such as need to access lower primitives
 // and being able to use them to write your own wrappers.
-func NewCore(endpoint string, accessKeyID, secretAccessKey string, secure bool) (*Core, error) {
+func NewCore(endpoint string, accessKeyID, secretAccessKey string, secure bool, debug bool) (*Core, error) {
 	var s3Client Core
-	client, err := NewV4(endpoint, accessKeyID, secretAccessKey, secure)
+	client, err := NewV4(endpoint, accessKeyID, secretAccessKey, secure, debug)
 	if err != nil {
 		return nil, err
 	}

@@ -23,16 +23,16 @@ import (
 )
 
 // listAllMyBucketsResult container for listBuckets response.
-type listAllMyBucketsResult struct {
+type ListAllMyBucketsResult struct {
 	// Container for one or more buckets.
 	Buckets struct {
 		Bucket []BucketInfo
 	}
-	Owner owner
+	Owner Owner
 }
 
 // owner container for bucket owner information.
-type owner struct {
+type Owner struct {
 	DisplayName string
 	ID          string
 }
@@ -155,7 +155,7 @@ type ListObjectPartsResult struct {
 	UploadID string `xml:"UploadId"`
 
 	Initiator initiator
-	Owner     owner
+	Owner     Owner
 
 	StorageClass         string
 	PartNumberMarker     int
