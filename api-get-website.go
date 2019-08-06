@@ -24,15 +24,16 @@ import (
 	"net/url"
 
 	"github.com/minio/minio-go/pkg/s3utils"
+	"fmt"
 )
 
-// GetBucketPolicy - get bucket policy at a given path.
-func (c Client) GetBucketPolicy(bucketName string) (string, error) {
+// GetBucketWebsite - get bucket website at a given path.
+func (c Client) GetBucketWebsite(bucketName string) (string, error) {
 	// Input validation.
 	if err := s3utils.CheckValidBucketName(bucketName); err != nil {
 		return "", err
 	}
-	bucketPolicy, err := c.getBucketPolicy(bucketName)
+	bucketWebsite, err := c.getBucketWebsite(bucketName)
 	if err != nil {
 		errResponse := ToErrorResponse(err)
 		if errResponse.Code == "NoSuchBucketPolicy" {
@@ -40,15 +41,15 @@ func (c Client) GetBucketPolicy(bucketName string) (string, error) {
 		}
 		return "", err
 	}
-	return bucketPolicy, nil
+	return bucketWebsite, nil
 }
 
-// Request server for current bucket policy.
-func (c Client) getBucketPolicy(bucketName string) (string, error) {
+// Request server for current bucket Website.
+func (c Client) getBucketWebsite(bucketName string) (string, error) {
 	// Get resources properly escaped and lined up before
 	// using them in http request.
 	urlValues := make(url.Values)
-	urlValues.Set("policy", "")
+	urlValues.Set("website", "")
 
 	// Execute GET on bucket to list objects.
 	resp, err := c.executeMethod(context.Background(), "GET", requestMetadata{
@@ -62,17 +63,18 @@ func (c Client) getBucketPolicy(bucketName string) (string, error) {
 		return "", err
 	}
 
+	fmt.Print(resp.Header, resp.StatusCode, resp.Status)
 	if resp != nil {
 		if resp.StatusCode != http.StatusOK {
 			return "", httpRespToErrorResponse(resp, bucketName, "")
 		}
 	}
 
-	bucketPolicyBuf, err := ioutil.ReadAll(resp.Body)
+	bucketWebsiteBuf, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 
-	policy := string(bucketPolicyBuf)
-	return policy, err
+	acl := string(bucketWebsiteBuf)
+	return acl, err
 }

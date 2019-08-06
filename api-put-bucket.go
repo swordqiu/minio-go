@@ -25,8 +25,11 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	//"fmt"
 
-	"github.com/minio/minio-go/v6/pkg/s3utils"
+	"github.com/minio/minio-go/pkg/s3utils"
+	"fmt"
+	"os"
 )
 
 /// Bucket operations
@@ -303,4 +306,139 @@ func (c Client) SetBucketNotification(bucketName string, bucketNotification Buck
 // RemoveAllBucketNotification - Remove bucket notification clears all previously specified config
 func (c Client) RemoveAllBucketNotification(bucketName string) error {
 	return c.SetBucketNotification(bucketName, BucketNotification{})
+}
+
+// SetBucketPolicy set the access permissions on an existing bucket.
+func (c Client) SetBucketAcl(bucketName string, policy AccessControlPolicy) error {
+	// Input validation.
+	if err := s3utils.CheckValidBucketName(bucketName); err != nil {
+		return err
+	}
+
+	// Save the updated policies.
+	return c.putBucketAcl(bucketName, "", policy)
+}
+
+// SetBucketPolicy set the access permissions on an existing bucket.
+func (c Client) SetObjectAcl(bucketName string, objectName string, policy AccessControlPolicy) error {
+	// Input validation.
+	if err := s3utils.CheckValidBucketName(bucketName); err != nil {
+		return err
+	}
+
+	if err := s3utils.CheckValidObjectName(objectName); err != nil {
+		return err
+	}
+
+	// Save the updated policies.
+	return c.putBucketAcl(bucketName, objectName, policy)
+}
+
+// Saves a new bucket acl.
+func (c Client) putBucketAcl(bucketName string, objectName string, acl AccessControlPolicy) error {
+	// Input validation.
+	// if err := s3utils.CheckValidBucketName(bucketName); err != nil {
+	// 	return err
+	// }
+
+	// Get resources properly escaped and lined up before
+	// using them in http request.
+	urlValues := make(url.Values)
+	urlValues.Set("acl", "")
+
+	// Content-length is mandatory for put policy request
+	aclBytes, err := xml.Marshal(acl)
+	if err != nil {
+		return err
+	}
+
+	aclReader := strings.NewReader(xml.Header + string(aclBytes))
+	b, err := ioutil.ReadAll(aclReader)
+	if err != nil {
+		return err
+	}
+
+	reqMetadata := requestMetadata{
+		bucketName:    bucketName,
+		objectName:    objectName,
+		queryValues:   urlValues,
+		contentBody:   aclReader,
+		contentLength: int64(len(b)),
+	}
+
+	if c.debug {
+		fmt.Fprintf(os.Stderr, "%s", string(b))
+	}
+
+	// Execute PUT to upload a new bucket policy.
+	resp, err := c.executeMethod(context.Background(), "PUT", reqMetadata)
+	defer closeResponse(resp)
+	if err != nil {
+		return err
+	}
+	if resp != nil {
+		if resp.StatusCode >= 400 {
+			return httpRespToErrorResponse(resp, bucketName, "")
+		}
+	}
+	return nil
+}
+
+// SetBucketLogging set the logging configuration on an existing bucket.
+func (c Client) SetBucketLogging(bucketName string, config BucketLoggingStatus) error {
+	// Input validation.
+	if err := s3utils.CheckValidBucketName(bucketName); err != nil {
+		return err
+	}
+
+	// Save the updated policies.
+	return c.putBucketLogging(bucketName, config)
+}
+
+// Saves a new bucket acl.
+func (c Client) putBucketLogging(bucketName string, config BucketLoggingStatus) error {
+	// Input validation.
+	if err := s3utils.CheckValidBucketName(bucketName); err != nil {
+		return err
+	}
+
+	// Get resources properly escaped and lined up before
+	// using them in http request.
+	urlValues := make(url.Values)
+	urlValues.Set("logging", "")
+
+	// Content-length is mandatory for put policy request
+	loggingBytes, err := xml.Marshal(config)
+	if err != nil {
+		return err
+	}
+	policyReader := strings.NewReader(xml.Header + string(loggingBytes))
+	b, err := ioutil.ReadAll(policyReader)
+	if err != nil {
+		return err
+	}
+
+	if c.debug {
+		fmt.Fprintf(os.Stderr, "%s", string(b))
+	}
+
+	reqMetadata := requestMetadata{
+		bucketName:    bucketName,
+		queryValues:   urlValues,
+		contentBody:   policyReader,
+		contentLength: int64(len(b)),
+	}
+
+	// Execute PUT to upload a new bucket policy.
+	resp, err := c.executeMethod(context.Background(), "PUT", reqMetadata)
+	defer closeResponse(resp)
+	if err != nil {
+		return err
+	}
+	if resp != nil {
+		if resp.StatusCode != http.StatusNoContent {
+			return httpRespToErrorResponse(resp, bucketName, "")
+		}
+	}
+	return nil
 }

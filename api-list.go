@@ -25,7 +25,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/minio/minio-go/v6/pkg/s3utils"
+	"github.com/minio/minio-go/pkg/s3utils"
 )
 
 // ListBuckets list all buckets owned by this authenticated user.
@@ -38,7 +38,7 @@ import (
 //       fmt.Println(message)
 //   }
 //
-func (c Client) ListBuckets() ([]BucketInfo, error) {
+func (c Client) ListBuckets() (*ListAllMyBucketsResult, error) {
 	// Execute GET on service.
 	resp, err := c.executeMethod(context.Background(), "GET", requestMetadata{contentSHA256Hex: emptySHA256Hex})
 	defer closeResponse(resp)
@@ -50,12 +50,12 @@ func (c Client) ListBuckets() ([]BucketInfo, error) {
 			return nil, httpRespToErrorResponse(resp, "", "")
 		}
 	}
-	listAllMyBucketsResult := listAllMyBucketsResult{}
+	listAllMyBucketsResult := ListAllMyBucketsResult{}
 	err = xmlDecoder(resp.Body, &listAllMyBucketsResult)
 	if err != nil {
 		return nil, err
 	}
-	return listAllMyBucketsResult.Buckets.Bucket, nil
+	return &listAllMyBucketsResult, nil
 }
 
 /// Bucket Read Operations.

@@ -41,9 +41,9 @@ import (
 
 	"golang.org/x/net/publicsuffix"
 
-	"github.com/minio/minio-go/v6/pkg/credentials"
-	"github.com/minio/minio-go/v6/pkg/s3signer"
-	"github.com/minio/minio-go/v6/pkg/s3utils"
+	"github.com/minio/minio-go/pkg/credentials"
+	"github.com/minio/minio-go/pkg/s3signer"
+	"github.com/minio/minio-go/pkg/s3utils"
 )
 
 // Client implements Amazon S3 compatible methods.
@@ -64,6 +64,9 @@ type Client struct {
 		appName    string
 		appVersion string
 	}
+
+	// turn on debug mode
+	debug bool
 
 	// Indicate whether we are using https or not
 	secure bool
@@ -97,6 +100,7 @@ type Options struct {
 	Secure       bool
 	Region       string
 	BucketLookup BucketLookupType
+	Debug        bool
 	// Add future fields here
 }
 
@@ -127,9 +131,9 @@ const (
 
 // NewV2 - instantiate minio client with Amazon S3 signature version
 // '2' compatibility.
-func NewV2(endpoint string, accessKeyID, secretAccessKey string, secure bool) (*Client, error) {
+func NewV2(endpoint string, accessKeyID, secretAccessKey string, secure bool, debug bool) (*Client, error) {
 	creds := credentials.NewStaticV2(accessKeyID, secretAccessKey, "")
-	clnt, err := privateNew(endpoint, creds, secure, "", BucketLookupAuto)
+	clnt, err := privateNew(endpoint, creds, secure, "", BucketLookupAuto, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -139,9 +143,9 @@ func NewV2(endpoint string, accessKeyID, secretAccessKey string, secure bool) (*
 
 // NewV4 - instantiate minio client with Amazon S3 signature version
 // '4' compatibility.
-func NewV4(endpoint string, accessKeyID, secretAccessKey string, secure bool) (*Client, error) {
+func NewV4(endpoint string, accessKeyID, secretAccessKey string, secure bool, debug bool) (*Client, error) {
 	creds := credentials.NewStaticV4(accessKeyID, secretAccessKey, "")
-	clnt, err := privateNew(endpoint, creds, secure, "", BucketLookupAuto)
+	clnt, err := privateNew(endpoint, creds, secure, "", BucketLookupAuto, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -150,9 +154,9 @@ func NewV4(endpoint string, accessKeyID, secretAccessKey string, secure bool) (*
 }
 
 // New - instantiate minio client, adds automatic verification of signature.
-func New(endpoint, accessKeyID, secretAccessKey string, secure bool) (*Client, error) {
+func New(endpoint, accessKeyID, secretAccessKey string, secure bool, debug bool) (*Client, error) {
 	creds := credentials.NewStaticV4(accessKeyID, secretAccessKey, "")
-	clnt, err := privateNew(endpoint, creds, secure, "", BucketLookupAuto)
+	clnt, err := privateNew(endpoint, creds, secure, "", BucketLookupAuto, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -170,21 +174,21 @@ func New(endpoint, accessKeyID, secretAccessKey string, secure bool) (*Client, e
 // NewWithCredentials - instantiate minio client with credentials provider
 // for retrieving credentials from various credentials provider such as
 // IAM, File, Env etc.
-func NewWithCredentials(endpoint string, creds *credentials.Credentials, secure bool, region string) (*Client, error) {
-	return privateNew(endpoint, creds, secure, region, BucketLookupAuto)
+func NewWithCredentials(endpoint string, creds *credentials.Credentials, secure bool, region string, debug bool) (*Client, error) {
+	return privateNew(endpoint, creds, secure, region, BucketLookupAuto, debug)
 }
 
 // NewWithRegion - instantiate minio client, with region configured. Unlike New(),
 // NewWithRegion avoids bucket-location lookup operations and it is slightly faster.
 // Use this function when if your application deals with single region.
-func NewWithRegion(endpoint, accessKeyID, secretAccessKey string, secure bool, region string) (*Client, error) {
+func NewWithRegion(endpoint, accessKeyID, secretAccessKey string, secure bool, region string, debug bool) (*Client, error) {
 	creds := credentials.NewStaticV4(accessKeyID, secretAccessKey, "")
-	return privateNew(endpoint, creds, secure, region, BucketLookupAuto)
+	return privateNew(endpoint, creds, secure, region, BucketLookupAuto, debug)
 }
 
 // NewWithOptions - instantiate minio client with options
 func NewWithOptions(endpoint string, opts *Options) (*Client, error) {
-	return privateNew(endpoint, opts.Creds, opts.Secure, opts.Region, opts.BucketLookup)
+	return privateNew(endpoint, opts.Creds, opts.Secure, opts.Region, opts.BucketLookup, opts.Debug)
 }
 
 // EndpointURL returns the URL of the S3 endpoint.
@@ -276,7 +280,7 @@ func (c *Client) redirectHeaders(req *http.Request, via []*http.Request) error {
 	return nil
 }
 
-func privateNew(endpoint string, creds *credentials.Credentials, secure bool, region string, lookup BucketLookupType) (*Client, error) {
+func privateNew(endpoint string, creds *credentials.Credentials, secure bool, region string, lookup BucketLookupType, debug bool) (*Client, error) {
 	// construct endpoint.
 	endpointURL, err := getEndpointURL(endpoint, secure)
 	if err != nil {
@@ -298,6 +302,9 @@ func privateNew(endpoint string, creds *credentials.Credentials, secure bool, re
 
 	// Remember whether we are using https or not
 	clnt.secure = secure
+
+	// whether turn on debug
+	clnt.debug = debug
 
 	// Save endpoint URL, user agent for future uses.
 	clnt.endpointURL = endpointURL

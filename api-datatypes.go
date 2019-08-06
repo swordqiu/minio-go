@@ -66,7 +66,7 @@ type ObjectMultipartInfo struct {
 	Initiated time.Time `type:"timestamp" timestampFormat:"iso8601"`
 
 	Initiator initiator
-	Owner     owner
+	Owner     Owner
 
 	// The type of storage to use for the object. Defaults to 'STANDARD'.
 	StorageClass string
