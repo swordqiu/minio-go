@@ -75,6 +75,7 @@ func TestGetObjectCore(t *testing.T) {
 		os.Getenv(accessKey),
 		os.Getenv(secretKey),
 		mustParseBool(os.Getenv(enableSecurity)),
+		true,
 	)
 	if err != nil {
 		t.Fatal("Error:", err)
@@ -251,6 +252,7 @@ func TestGetObjectContentEncoding(t *testing.T) {
 		os.Getenv(accessKey),
 		os.Getenv(secretKey),
 		mustParseBool(os.Getenv(enableSecurity)),
+		true,
 	)
 	if err != nil {
 		t.Fatal("Error:", err)
@@ -328,6 +330,7 @@ func TestGetBucketPolicy(t *testing.T) {
 		os.Getenv(accessKey),
 		os.Getenv(secretKey),
 		mustParseBool(os.Getenv(enableSecurity)),
+		true,
 	)
 	if err != nil {
 		t.Fatal("Error:", err)
@@ -350,7 +353,7 @@ func TestGetBucketPolicy(t *testing.T) {
 
 	// Verify if bucket exits and you have access.
 	var exists bool
-	exists, err = c.BucketExists(bucketName)
+	exists, _, err = c.BucketExists(bucketName)
 	if err != nil {
 		t.Fatal("Error:", err, bucketName)
 	}
@@ -391,6 +394,7 @@ func TestCoreCopyObject(t *testing.T) {
 		os.Getenv(accessKey),
 		os.Getenv(secretKey),
 		mustParseBool(os.Getenv(enableSecurity)),
+		true,
 	)
 	if err != nil {
 		t.Fatal("Error:", err)
@@ -505,6 +509,7 @@ func TestCoreCopyObjectPart(t *testing.T) {
 		os.Getenv(accessKey),
 		os.Getenv(secretKey),
 		mustParseBool(os.Getenv(enableSecurity)),
+		true,
 	)
 	if err != nil {
 		t.Fatal("Error:", err)
@@ -650,6 +655,7 @@ func TestCorePutObject(t *testing.T) {
 		os.Getenv(accessKey),
 		os.Getenv(secretKey),
 		mustParseBool(os.Getenv(enableSecurity)),
+		true,
 	)
 	if err != nil {
 		t.Fatal("Error:", err)
@@ -741,7 +747,9 @@ func TestCoreGetObjectMetadata(t *testing.T) {
 		os.Getenv(serverEndpoint),
 		os.Getenv(accessKey),
 		os.Getenv(secretKey),
-		mustParseBool(os.Getenv(enableSecurity)))
+		mustParseBool(os.Getenv(enableSecurity)),
+		true,
+	)
 	if err != nil {
 		log.Fatalln(err)
 	}
