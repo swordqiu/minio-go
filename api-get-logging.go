@@ -19,11 +19,11 @@ package minio
 
 import (
 	"context"
+	"encoding/xml"
 	"net/http"
 	"net/url"
-	"encoding/xml"
 
-	"github.com/minio/minio-go/pkg/s3utils"
+	"github.com/minio/minio-go/v6/pkg/s3utils"
 )
 
 const (

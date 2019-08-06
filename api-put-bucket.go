@@ -21,15 +21,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/xml"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
-	//"fmt"
-
-	"github.com/minio/minio-go/pkg/s3utils"
-	"fmt"
 	"os"
+	"strings"
+
+	"github.com/minio/minio-go/v6/pkg/s3utils"
 )
 
 /// Bucket operations

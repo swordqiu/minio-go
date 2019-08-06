@@ -228,7 +228,7 @@ func TestGetBucketLocationRequest(t *testing.T) {
 		var err error
 		if testCase.info.endPoint != "" {
 
-			client, err = New(testCase.info.endPoint, testCase.info.accessKey, testCase.info.secretKey, testCase.info.enableInsecure)
+			client, err = New(testCase.info.endPoint, testCase.info.accessKey, testCase.info.secretKey, testCase.info.enableInsecure, true)
 			if err != nil {
 				t.Fatalf("Test %d: Failed to create new Client: %s", i+1, err.Error())
 			}

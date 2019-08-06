@@ -19,12 +19,12 @@ package minio
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
-	"github.com/minio/minio-go/pkg/s3utils"
-	"fmt"
+	"github.com/minio/minio-go/v6/pkg/s3utils"
 )
 
 // GetBucketWebsite - get bucket website at a given path.
